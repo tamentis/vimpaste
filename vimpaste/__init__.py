@@ -1,12 +1,10 @@
 import couchdb
+import time
 import msg
 import random
 from base62 import b62encode, b62decode
 
-documents = {
-    123: "woot\nuber woot\n",
-    432: "this is not a vimpaste\n\nyes it is",
-}
+__version__ = "0.1.0"
 
 design = {
     "_id": "_design/usage",
@@ -71,6 +69,8 @@ def save_new_doc(id, data):
     new_doc["raw"] = data
     new_doc["source"] = id
     new_doc["new"] = False
+    # Keep it two weeks by default
+    new_doc["expires"] = int(time.time() + 60 * 60 * 24 * 14)
     try:
         db.save(new_doc)
     except ResourceConflict:
@@ -106,7 +106,10 @@ def app(env, start_response):
     # Welcome page
     if path == "/":
         start_response("200 OK", [("Content-Type", "text/plain")])
-        return [ msg.welcome ]
+        return [ msg.welcome % { "version": __version__ } ]
+    elif path == "/vimpaste.vim":
+        start_response("200 OK", [("Content-Type", "text/plain")])
+        return [ msg.plugin % { "version": __version__ } ]
 
     # Wrong syntax
     try:
