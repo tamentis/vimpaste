@@ -3,36 +3,64 @@ Basic templates.
 """
 
 welcome = """\
+=======================
 Welcome to vimpaste.com
 =======================
-This free service allows you to paste your vim buffer to this site and share
-the raw text with a simple id and without any HTML crap around it.
 
-All you need is curl and a small plugin that you can install with:
+VimPaste allows you to paste your vim buffers online and share them in raw text
+with a simple identifier. Our tiny vim plugin adds support for our vp: syntax.
 
-    mkdir ~/.vim/plugin/
+Requirements
+------------
+ - vim 6 or newer
+ - curl
+
+Installation/Upgrade
+--------------------
+You can use the same two lines to upgrade the plugin later on::
+
+    mkdir -p ~/.vim/plugin/
     curl http://vimpaste.com/vimpaste.vim > ~/.vim/plugin/vimpaste.vim
 
-You can then open the vimpastes with the following:
+Create a new VimPaste
+---------------------
+From vim, simply type:
 
-    vim vp:f71dD
+    :w vp:
 
-If you save this buffer, it will automatically save it to vimpaste with a new
-id. You just need to hit ^G to find out the id of this new vimpaste.
+VimPastes will give you the identifier at the bottom of your terminal.
 
-You can also access your vimpastes with a standard GET call on your browser:
+Open a VimPaste from an identifier
+----------------------------------
+You were given a code such as "vp:q1w2e3", here is how to read it::
 
-    http://vimpaste.com/f71dD
+    vim vp:q1w2e3
+
+Keep on saving!
+---------------
+If you created a VimPaste from a blank buffer or if you opened a VimPaste from
+an identifier, you can use :w to save the paste as many times as you want.
+Every save will create a new paste with its own identifier.
+
+Tell me how it works
+--------------------
+ - Linux on EC2 (Ubuntu)
+ - Apache + mod_wsgi + python2.6
+ - CouchDB
+
+You can see the code there:
+
+    http://github.com/tamentis/vimpaste/
 
 vimpaste-%(version)s
 """
 
 plugin = """
 " vimpaste.vim: (global plugin) Handles file transfer with VimPaste
-" Last Change:	2011-01-24 21:52:34
+" Last Change:	2011-01-26 22:57:37
 " Maintainer:	Bertrand Janin <tamentis@neopulsar.org>
 " Version:	%(version)s
-" License:	MIT
+" License:	ISC (OpenSource, BSD/MIT compatible)
 " =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 "
@@ -45,8 +73,8 @@ let s:curl_exec = 'curl'
 "
 function! <SID>VpUrl(url, suffix)
 	let l:index = stridx(a:url, ':')
-	let l:vpid = substitute(strpart(a:url, l:index + 1),'\\','/','g')
-	return 'http://localhost:9000/' . l:vpid
+	let l:vpid = substitute(strpart(a:url, l:index + 1),'\','/','g')
+	return 'http://vimpaste.com/' . l:vpid
 endfunction
 
 "
@@ -60,7 +88,7 @@ function! <SID>VpGet(url)
 	" 2. Compute target URL
 	let l:target_url = <SID>VpUrl(a:url, '')
 	" 3. Run GET command
-	silent exe "!" . s:curl_exec . ' -o "' .b:vp_tempfile . '" "' . l:target_url . '"'
+	silent exe "!" . s:curl_exec . ' -s -o "' .b:vp_tempfile . '" "' . l:target_url . '"'
 	" 4. Insert the tempfile
 	exe "0read " . b:vp_tempfile
 	" 5. Fixup last blank line
@@ -76,7 +104,7 @@ function! <SID>VpPut(url)
 	if !exists('b:vp_outgoing_tempfile')
 		let b:vp_outgoing_tempfile = tempname()
 	endif
-	exe "write! " . b:vp_outgoing_tempfile
+	silent exe "write! " . b:vp_outgoing_tempfile
 	set nomodified
 
 	" Create temp file for return file with vp:id.
@@ -89,7 +117,10 @@ function! <SID>VpPut(url)
 	silent exe "!" . s:curl_exec . ' -s -o "' .b:vp_incoming_tempfile . '" --data-binary "@' . b:vp_outgoing_tempfile. '" "' . l:target_url . '"'
 	for line in readfile(b:vp_incoming_tempfile, 'b', 1)
 		if line =~ '^vp:'
-			silent exe ':file ' . line
+			if bufname("%") == "" || stridx(bufname("%"), "vp:") == 0
+				silent exe ':file ' . line
+			endif
+			echo 'VimPasted as ' . line
 		endif
 	endfor
 endfunction
