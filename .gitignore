@@ -1,2 +1,5 @@
 virtualenv
 *.pyc
+build
+dist
+vimpaste.egg-info

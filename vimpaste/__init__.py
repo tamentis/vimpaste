@@ -1,10 +1,10 @@
 import msg
 import base64
-from vimpaste.tools import b62encode, b62decode, extract_expiration
-from vimpaste.db import init_db, save_paste, get_paste
+from tools import b62encode, b62decode, extract_expiration
+from db import init_db, save_paste, get_paste
 
 
-__version__ = "0.1.1"
+__version__ = "0.1.3"
 
 
 def app(env, start_response):

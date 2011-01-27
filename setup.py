@@ -16,10 +16,11 @@ setup(
     url="http://vimpaste.com/",
     license="LICENSE.txt",
     install_requires=[
+        "couchdb>=0.8",
     ],
-    packages=find_packages(exclude=["ez_setup"]),
+    packages=find_packages(exclude=['ez_setup']),
     scripts=[
-        "serve.py",
+        "tools/serve.py",
     ],
     include_package_data=True,
     test_suite="nose.collector",

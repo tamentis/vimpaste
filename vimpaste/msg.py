@@ -2,8 +2,7 @@
 Basic templates.
 """
 
-welcome = """\
-=======================
+welcome = r"""=======================
 Welcome to vimpaste.com
 =======================
 
@@ -76,8 +75,7 @@ You can see the code there:
 vimpaste-%(version)s
 """
 
-plugin = """
-" vimpaste.vim: (global plugin) Handles file transfer with VimPaste
+plugin = r"""" vimpaste.vim: (global plugin) Handles file transfer with VimPaste
 " Last Change:	2011-01-26 22:57:37
 " Maintainer:	Bertrand Janin <tamentis@neopulsar.org>
 " Version:	%(version)s
@@ -138,7 +136,7 @@ function! <SID>VpPut(url)
 	silent exe "!" . s:curl_exec . ' -s -o "' .b:vp_incoming_tempfile . '" --data-binary "@' . b:vp_outgoing_tempfile. '" "' . l:target_url . '"'
 	for line in readfile(b:vp_incoming_tempfile, 'b', 1)
 		if line =~ '^vp:'
-			if bufname("%") == "" || stridx(bufname("%"), "vp:") == 0
+			if bufname("%%") == "" || stridx(bufname("%%"), "vp:") == 0
 				silent exe ':file ' . line
 			endif
 			echo 'VimPasted as ' . line
