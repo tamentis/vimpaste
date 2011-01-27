@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+Debugging WSGI server.
+"""
+
 from wsgiref.simple_server import make_server
 from vimpaste import app
 
