@@ -33,7 +33,7 @@ def app(env, start_response):
 
     # Create a new post
     if method == "POST":
-        data = env["wsgi.input"].read(int(env["CONTENT_LENGTH"]))
+        data = env["wsgi.input"].read(int(env["CONTENT_LENGTH"]))[:16384]
         new_id = save_paste(id, base64.b64encode(data), exp)
         print("New Paste: %d" % new_id)
         start_response("200 OK", [("Content-Type", "text/plain")])

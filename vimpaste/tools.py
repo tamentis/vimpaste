@@ -20,7 +20,8 @@ exp_multipliers = {
 
 
 def extract_expiration(path):
-    default = 60 * 60 * 24 * 14
+    default = exp_multipliers["w"] * 2  # 2 weeks
+    max_exp = exp_multipliers["y"] * 10 # 10 years
 
     if "+" not in path:
         return path, default
@@ -31,7 +32,7 @@ def extract_expiration(path):
     if not m:
         return path, default
 
-    return path, int(m.group(1)) * exp_multipliers[m.group(2)[0]]
+    return path, min(max_exp, (m.group(1)) * exp_multipliers[m.group(2)[0]])
 
 
 def b62encode(number):

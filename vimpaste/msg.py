@@ -42,6 +42,27 @@ If you created a VimPaste from a blank buffer or if you opened a VimPaste from
 an identifier, you can use :w to save the paste as many times as you want.
 Every save will create a new paste with its own identifier.
 
+Expiration
+----------
+You can specify how long you want VimPaste to keep your snippet by adding the
+time after vp: such as::
+
+    :w vp:+2months
+
+You can use hours, days, weeks, months and years.  Single letter shortcuts and
+singular/plural forms are accepted, the following examples are valid::
+
+    :w vp:+10d
+    :w vp:+1day
+
+The default without any value will be two weeks.
+
+Limitations
+-----------
+ - We limit to 16kB per paste. If you feel this is too short, let us know.
+   Bigger pastes will just be cropped.
+ - The maximum expiration is 10 years.
+
 Tell me how it works
 --------------------
  - Linux on EC2 (Ubuntu)
