@@ -6,6 +6,7 @@ import couchdb
 import time
 import random
 
+_db = None
 
 # This is the design document we're trying to enforce on the connected
 # database. It is checked at every startups.
@@ -43,7 +44,7 @@ def generate_blanks(amount=10):
     """Generate documents when we're running out of expired posts."""
     print("Generating %d blank documents:" % amount)
 
-    res = db.view("usage/highest_id", reduce=True)
+    res = _db.view("usage/highest_id", reduce=True)
     if len(res) == 0:
         base_id = 0
     else:
@@ -54,7 +55,7 @@ def generate_blanks(amount=10):
     for i in range(base_id, base_id+amount):
         doc = { "_id": str(i), "new": True }
         try:
-            db.save(doc)
+            _db.save(doc)
         except couchdb.ResourceConflict:
             pass
 
@@ -63,7 +64,7 @@ def get_available_doc():
     """Get the first available paste, be it an expired one or a fresh
     new paste. If we can't find one, let's generate a few.
     """
-    res = db.view("usage/reusable", limit=5, include_docs=True)
+    res = _db.view("usage/reusable", limit=5, include_docs=True)
 
     # Need some more!
     if len(res) == 0:
@@ -73,41 +74,46 @@ def get_available_doc():
     return random.choice([row.doc for row in res.rows])
 
 
-def save_new_doc(id, data):
+def save_paste(source_id, data, expiration):
     """Let's save this stuff somewhere, find an available doc and update it."""
     doc = get_available_doc()
     new_doc = doc.copy()
     new_doc["raw"] = data
-    new_doc["source"] = id
+    new_doc["source"] = source_id
     new_doc["new"] = False
     # Keep it two weeks by default
-    new_doc["expires"] = int(time.time() + 60 * 60 * 24 * 14)
+    new_doc["expires"] = int(time.time() + expiration)
     try:
-        db.save(new_doc)
+        _db.save(new_doc)
     except ResourceConflict:
-        return save_new_doc(id, data)
+        return save_paste(id, data)
     return int(doc.id)
 
 
+def get_paste(id):
+    return _db.get(str(id))
+
 def init_db():
     """Reference the database and enforce the design document."""
+    global _db
+
+    if _db: return
+
     server = couchdb.Server()
     if "vimpaste" not in server:
         print("Creating initial database.")
         server.create("vimpaste")
         generate_blanks()
-    db = server["vimpaste"]
+    _db = server["vimpaste"]
 
     # Make sure the design docs are in place.
-    current_design = db.get("_design/usage")
+    current_design = _db.get("_design/usage")
     if not current_design:
         print("Creating initial design document.")
-        db.save(design)
+        _db.save(design)
     elif current_design["views"] != design["views"]:
         print("Updating design document...")
         new_design = current_design.copy()
         new_design["views"] = design["views"]
-        db.save(new_design)
-
-    return db
+        _db.save(new_design)
 
