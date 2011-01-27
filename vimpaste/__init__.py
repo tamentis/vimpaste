@@ -1,110 +1,18 @@
-import couchdb
-import time
 import msg
-import random
-from base62 import b62encode, b62decode
-
-__version__ = "0.1.0"
-
-design = {
-    "_id": "_design/usage",
-    "language": "javascript",
-    "views": {
-        "reusable": {
-            "map": """
-                function(doc) {
-                    if (doc.expires >= (new Date()).getTime()) {
-                        emit([doc.expires, doc.id], null)
-                    } else if (doc.new) {
-                        emit([0, doc.id], null)
-                    }
-                }"""
-        },
-        "highest_id": {
-            "map": """function(doc) { emit("highest_id", parseInt(doc._id)) }""",
-            "reduce": """
-                function(keys, values) {
-                    var max = 0;
-                    for (var i = 0; i < values.length; i++) {
-                        if (values[i] > max) {
-                        max = values[i];
-                        }
-                    }
-                    return max;
-                }"""
-        }
-    }
-}
-
-def generate_blanks(amount=10):
-    print("Generating %d blank documents..." % amount)
-
-    res = db.view("usage/highest_id", reduce=True)
-    if len(res) == 0:
-        base_id = 0
-    else:
-        base_id = res.rows[0].value + 1
-
-    for i in range(base_id, base_id+amount):
-        doc = { "_id": str(i), "new": True }
-        try:
-            db.save(doc)
-        except couchdb.ResourceConflict:
-            pass
-
-def get_available_doc():
-    res = db.view("usage/reusable", limit=5, include_docs=True)
-
-    # Generate a few more extra docs if needed.
-    if len(res) == 0:
-        generate_blanks()
-        return get_available_doc()
-
-    return random.choice([row.doc for row in res.rows])
+from vimpaste.base62 import b62encode, b62decode
+from vimpaste.db import init_db, save_new_doc
 
 
-def save_new_doc(id, data):
-    doc = get_available_doc()
-    new_doc = doc.copy()
-    new_doc["raw"] = data
-    new_doc["source"] = id
-    new_doc["new"] = False
-    # Keep it two weeks by default
-    new_doc["expires"] = int(time.time() + 60 * 60 * 24 * 14)
-    try:
-        db.save(new_doc)
-    except ResourceConflict:
-        return save_new_doc(id, data)
-    return int(doc.id)
-
-
-# Initialize couchdb db
-print("Referencing CouchDB database.")
-server = couchdb.Server()
-if "vimpaste" not in server:
-    print("Creating initial database.")
-    server.create("vimpaste")
-    generate_blanks()
-db = server["vimpaste"]
-
-# Make sure the design docs are in place.
-current_design = db.get("_design/usage")
-if not current_design:
-    print("Creating initial design document.")
-    db.save(design)
-elif current_design["views"] != design["views"]:
-    print("Updating design document...")
-    new_design = current_design.copy()
-    new_design["views"] = design["views"]
-    db.save(new_design)
+__version__ = "0.1.1"
 
 
 def app(env, start_response):
+    db = init_db()
     method = env["REQUEST_METHOD"]
     path = env["PATH_INFO"]
 
     # Welcome page
-    if path == "/":
+    if method == "GET" and path == "/":
         start_response("200 OK", [("Content-Type", "text/plain")])
         return [ msg.welcome % { "version": __version__ } ]
     elif path == "/vimpaste.vim":
