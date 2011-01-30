@@ -7,6 +7,9 @@ import time
 import random
 
 _db = None
+_cache = []
+_timestamp = 0
+_timestamp_count = 0
 
 # This is the design document we're trying to enforce on the connected
 # database. It is checked at every startups.
@@ -40,7 +43,11 @@ design = {
     }
 }
 
-def generate_blanks(amount=10):
+class TooManySaves(Exception):
+    """Raised when we feel flooded."""
+    pass
+
+def generate_blanks(amount=5):
     """Generate documents when we're running out of expired posts."""
     print("Generating %d blank documents:" % amount)
 
@@ -76,6 +83,19 @@ def get_available_doc():
 
 def save_paste(source_id, data, expiration):
     """Let's save this stuff somewhere, find an available doc and update it."""
+    global _timestamp, _timestamp_count
+
+    # Clumsy flood management
+    now = int(time.time())
+    if _timestamp != now:
+        _timestamp = now
+        _timestamp_count = 1
+    else:
+        _timestamp_count += 1
+
+    if _timestamp_count > 10:
+        raise TooManySaves()
+
     doc = get_available_doc()
     new_doc = doc.copy()
     new_doc["raw"] = data
@@ -87,10 +107,18 @@ def save_paste(source_id, data, expiration):
         _db.save(new_doc)
     except ResourceConflict:
         return save_paste(id, data)
-    return int(doc.id)
+    id = int(doc.id)
+    _cache.append(new_doc)
+    while len(_cache) > 50:
+        _cache.pop(0)
+    return id
 
 
 def get_paste(id):
+    for doc in _cache:
+        if int(doc["_id"]) == id:
+            print("Fetching %d from cache..." % id)
+            return doc
     return _db.get(str(id))
 
 def init_db():

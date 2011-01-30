@@ -1,10 +1,10 @@
 import msg
 import base64
 from tools import b62encode, b62decode, extract_expiration
-from db import init_db, save_paste, get_paste
+from db import init_db, save_paste, get_paste, TooManySaves
 
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 
 def app(env, start_response):
@@ -34,7 +34,13 @@ def app(env, start_response):
     # Create a new post
     if method == "POST":
         data = env["wsgi.input"].read(int(env["CONTENT_LENGTH"]))[:16384]
-        new_id = save_paste(id, base64.b64encode(data), exp)
+        try:
+            new_id = save_paste(id, base64.b64encode(data), exp)
+        except TooManySaves:
+            start_response("400 Bad Request", [("Content-Type", "text/plain")])
+            print("Too many saves! Flood?")
+            return [ "Too many saves!" ]
+
         print("New Paste: %d" % new_id)
         start_response("200 OK", [("Content-Type", "text/plain")])
         return [ "vp:%s" % b62encode(new_id) ]
