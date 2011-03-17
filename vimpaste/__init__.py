@@ -6,6 +6,8 @@ from db import init_db, save_paste, get_paste, TooManySaves
 
 __version__ = "0.1.4"
 
+MAX_LEN = 65536
+
 
 def app(env, start_response):
     method = env["REQUEST_METHOD"]
@@ -33,7 +35,7 @@ def app(env, start_response):
 
     # Create a new post
     if method == "POST":
-        data = env["wsgi.input"].read(int(env["CONTENT_LENGTH"]))[:16384]
+        data = env["wsgi.input"].read(int(env["CONTENT_LENGTH"]))[:MAX_LEN]
         try:
             new_id = save_paste(id, base64.b64encode(data), exp)
         except TooManySaves:
