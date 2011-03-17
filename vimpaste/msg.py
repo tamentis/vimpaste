@@ -58,7 +58,7 @@ The default without any value will be two weeks.
 
 Limitations
 -----------
- - We limit to 16kB per paste. If you feel this is too short, let us know.
+ - We limit to 64kB per paste. If you feel this is too short, let us know.
    Bigger pastes will just be cropped.
  - The maximum expiration is 10 years.
 
