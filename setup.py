@@ -5,11 +5,11 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
-import vimpaste
+from vimpaste import __version__
 
 setup(
     name="vimpaste",
-    version=vimpaste.__version__,
+    version=__version__,
     description="Web App for vimpaste.com",
     author="Bertrand Janin",
     author_email="tamentis@neopulsar.org",
