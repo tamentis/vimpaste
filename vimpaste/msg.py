@@ -78,3 +78,9 @@ Tell me how it works
 vimpaste-%(version)s
 """
 
+
+status = """Version: %(version)s
+Allocated Slots: %(count)d
+Cache Size: %(cache)d
+Last Id: %(last_id)s
+"""
