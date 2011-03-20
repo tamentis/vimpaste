@@ -39,6 +39,10 @@ design = {
                     }
                     return max;
                 }"""
+        },
+        "allocated": {
+            "map": """function(doc) { emit("allocated", 1); }""",
+            "reduce": """_sum"""
         }
     }
 }
@@ -106,7 +110,7 @@ def save_paste(source_id, data, expiration):
     try:
         _db.save(new_doc)
     except ResourceConflict:
-        return save_paste(id, data)
+        return save_paste(id, data, expiration)
     id = int(doc.id)
     _cache.append(new_doc)
     while len(_cache) > 50:
@@ -121,7 +125,27 @@ def get_paste(id):
             return doc
     return _db.get(str(id))
 
-def init_db():
+
+def allocated_slots():
+    """How many slots are allocated in the database at the moment."""
+    res = _db.view("usage/allocated", reduce=True)
+    return res.rows[0].value
+
+
+def cache_len():
+    """Return the current size of the cache."""
+    return len(_cache)
+
+
+def last_paste_id():
+    """Return the identifier of the latest paste created if any."""
+    if _cache:
+        return int(_cache[-1]["_id"])
+    else:
+        return 0
+
+
+def init():
     """Reference the database and enforce the design document."""
     global _db
 
@@ -130,9 +154,9 @@ def init_db():
     server = couchdb.Server()
     if "vimpaste" not in server:
         print("Creating initial database.")
-        server.create("vimpaste")
-        generate_blanks()
-    _db = server["vimpaste"]
+        _db = server.create("vimpaste")
+    else:
+        _db = server["vimpaste"]
 
     # Make sure the design docs are in place.
     current_design = _db.get("_design/usage")
@@ -144,4 +168,5 @@ def init_db():
         new_design = current_design.copy()
         new_design["views"] = design["views"]
         _db.save(new_design)
+
 
