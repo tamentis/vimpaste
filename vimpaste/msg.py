@@ -42,6 +42,10 @@ If vim is already opened, you can also do::
 
     :e vp:q1w2e3
 
+You can also access your vimpaste from your browser::
+
+    http://vimpaste/q1w2e3
+
 Keep on saving!
 ---------------
 If you created a vimpaste from a blank buffer or if you opened a vimpaste from
@@ -70,8 +74,9 @@ Limitations
 
 Tell me how it works
 --------------------
- - Linux on EC2 (Ubuntu)
- - Apache + mod_wsgi + python2.6
+ - Rackspace
+ - Ubuntu
+ - Apache + mod_wsgi + python
  - CouchDB
  - http://github.com/tamentis/vimpaste/
 
