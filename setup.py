@@ -20,7 +20,7 @@ setup(
     ],
     packages=find_packages(exclude=['ez_setup']),
     scripts=[
-        "tools/serve.py",
+        "tools/vimpaste-serve",
     ],
     include_package_data=True,
     test_suite="nose.collector",
