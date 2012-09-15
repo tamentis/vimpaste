@@ -2,6 +2,7 @@
 Thin and ugly couchdb access layer.
 """
 
+import os
 import couchdb
 import time
 import random
@@ -151,7 +152,14 @@ def init():
 
     if _db: return
 
-    server = couchdb.Server()
+    # That's in case we are hosted in Heroku...
+    couch_url = os.environ.get("CLOUDANT_URL")
+    if couch_url:
+        args = {"url": couch_url}
+    else:
+        args = {}
+
+    server = couchdb.Server(*args)
     if "vimpaste" not in server:
         print("Creating initial database.")
         _db = server.create("vimpaste")
