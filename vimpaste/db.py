@@ -155,11 +155,11 @@ def init():
     # That's in case we are hosted in Heroku...
     couch_url = os.environ.get("CLOUDANT_URL")
     if couch_url:
-        args = {"url": couch_url}
+        kwargs = {"url": couch_url}
     else:
-        args = {}
+        kwargs = {}
 
-    server = couchdb.Server(*args)
+    server = couchdb.Server(**kwargs)
     if "vimpaste" not in server:
         print("Creating initial database.")
         _db = server.create("vimpaste")
