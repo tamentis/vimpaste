@@ -74,10 +74,8 @@ Limitations
 
 Tell me how it works
 --------------------
- - Rackspace
- - Ubuntu
- - Apache + mod_wsgi + python
- - CouchDB
+ - Heroku
+ - Cloudant's CouchDB
  - http://github.com/tamentis/vimpaste/
 
 vimpaste-%(version)s
